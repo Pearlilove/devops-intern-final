@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Scripts and Container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Check shell scripts
+        run: shellcheck scripts/*.sh
+
+      - name: Check script syntax
+        run: |
+          bash -n scripts/sysinfo.sh
+          bash -n scripts/healthcheck.sh
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg BUILD_SHA=${{ github.sha }} \
+            -t devops-intern-final:${{ github.sha }} \
+            ./app
+
+      - name: Run container
+        run: |
+          docker run -d \
+            --name devops-nginx \
+            -p 8080:8080 \
+            devops-intern-final:${{ github.sha }}
+
+      - name: Wait for container health
+        run: |
+          for i in {1..10}; do
+            if curl --fail --silent http://localhost:8080/healthz; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container health check failed"
+          docker logs devops-nginx
+          exit 1
+
+      - name: Test healthcheck script
+        run: ./scripts/healthcheck.sh
