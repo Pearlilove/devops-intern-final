@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_URL="${APP_URL:-http://localhost:8080/healthz}"
+APP_URL="${1:-http://localhost:8080}"
 
 echo "===== APPLICATION HEALTH CHECK ====="
 echo "Checking: $APP_URL"
 
-if curl --fail --silent --show-error "$APP_URL"; then
-    echo ""
-    echo "Status: HEALTHY"
-else
-    echo ""
-    echo "Status: UNHEALTHY"
-    exit 1
+if HTTP_STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" "$APP_URL"); then
+    if [ "$HTTP_STATUS" = "200" ]; then
+        echo "Status: HEALTHY (HTTP $HTTP_STATUS)"
+        exit 0
+    fi
 fi
+
+echo "Status: UNHEALTHY (HTTP request failed or returned a non-200 status)"
+exit 1
