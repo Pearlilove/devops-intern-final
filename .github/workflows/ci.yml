@@ -124,13 +124,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Tag image
+            - name: Tag image
         run: |
-          docker tag devops-intern-final:${{ github.sha }} \
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          IMAGE_NAME=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
 
           docker tag devops-intern-final:${{ github.sha }} \
-            ghcr.io/${{ github.repository }}:latest
+            "$IMAGE_NAME:${{ github.sha }}"
+
+          docker tag devops-intern-final:${{ github.sha }} \
+            "$IMAGE_NAME:latest"
 
       - name: Push image
         run: |
