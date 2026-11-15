@@ -1,6 +1,6 @@
 
 FROM nginx:1.30.6-alpine-slim
-
+LABEL org.opencontainers.image.source="https://github.com/Pearlilove/devops-intern-final"
 ARG BUILD_SHA=local
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
